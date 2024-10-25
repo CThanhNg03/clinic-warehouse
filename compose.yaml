@@ -1,0 +1,95 @@
+services:
+  # HDFS 
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    ports:
+      - "9870:9870"
+    volumes:
+      - namenode:/hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+    networks:
+      - hadoop
+  
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    ports:
+      - "9864:9864"
+    volumes:
+      - datanode1:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+    networks:
+      - hadoop
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    ports:
+      - "9865:9864"
+    volumes:
+      - datanode2:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+    networks:
+      - hadoop
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    ports:
+      - "8088:8088"
+    env_file:
+      - ./hadoop.env
+    networks:
+      - hadoop
+
+  
+
+  # Spark
+  spark-master:
+    image: bde2020/spark-master:3.0.0-hadoop3.2
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+    env_file:
+      - ./spark.env
+    networks:
+      - hadoop
+
+  spark-worker:
+    image: bde2020/spark-worker:3.0.0-hadoop3.2
+    container_name: spark-worker
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    env_file:
+      - ./spark.env
+    networks:
+      - hadoop
+
+  # Database
+  warehouse:
+    image: posgres:latest
+    container_name: warehouse
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./warehouse.env
+    networks:
+      - hadoop
+    volumes:
+      - warehouse:/var/lib/postgresql/data
+
+networks:
+  hadoop:
+    driver: bridge
+    
+volumes:
+  namenode:
+  datanode1:
+  datanode2:
