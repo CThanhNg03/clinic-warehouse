@@ -24,18 +24,6 @@ services:
     networks:
       - hadoop
 
-  datanode2:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode2
-    ports:
-      - "9865:9864"
-    volumes:
-      - datanode2:/hadoop/dfs/data
-    env_file:
-      - ./hadoop.env
-    networks:
-      - hadoop
-
   resourcemanager:
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
     container_name: resourcemanager
@@ -74,7 +62,7 @@ services:
 
   # Database
   warehouse:
-    image: posgres:latest
+    image: postgres:latest
     container_name: warehouse
     ports:
       - "5432:5432"
@@ -93,3 +81,4 @@ volumes:
   namenode:
   datanode1:
   datanode2:
+  warehouse:

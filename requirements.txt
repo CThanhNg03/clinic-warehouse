@@ -1,4 +1,6 @@
-pyarrow
 pyspark
 injector
 python-dotenv
+pandas
+numpy
+matplotlib
