@@ -1,1 +1,1 @@
-from . import env
+from . import settings
