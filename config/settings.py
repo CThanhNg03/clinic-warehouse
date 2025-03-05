@@ -15,6 +15,12 @@ class SettingEnvironment:
             'port': os.getenv('STORAGE_PORT'),
             'user': os.getenv('STORAGE_USER'),
         }
+        self.database = {
+            'uri': os.getenv('DATABASE_JDBC'),
+            'user': os.getenv('DATABASE_USER'),
+            'password': os.getenv('DATABASE_PASSWORD'),
+            'driver': os.getenv('DATABASE_DRIVER')
+        }
         
     def is_production(self):
         return self.env == 'production'

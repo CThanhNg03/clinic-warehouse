@@ -4,6 +4,11 @@ from pyspark.sql import SparkSession
 
 from config.logger import logger
 from data_pipeline.utils import get_global_spark_session
+from pyspark.sql.functions import explode
+
+BATCH_SIZE = 8
+
+OUTPUT_PARTITION = 4
 
 spark: SparkSession = get_global_spark_session()
 bronze_layer = os.environ.get("BRONZE_LAYER")
@@ -38,7 +43,7 @@ def ingest_initial_data():
                     paths.extend([os.path.join(inner, f) for f in os.listdir(inner)])
             batch.extend(paths)
             batch_num += 1
-        if batch_num == 10:
+        if batch_num == BATCH_SIZE:
             batch_name = f"batch_{batch_id}"
             save_batch_data(batch, batch_name)
             batch, batch_num, batch_id = [], 0, batch_id + 1
@@ -53,7 +58,9 @@ def save_batch_data(data: List[str] | IO, batch_name: str):
     logger.info(f"Processing batch: {batch_name}")
     try:
         df = spark.read.option("multiline", True).json(data)
-        df.coalesce(1).write.mode("overwrite").parquet(f"{bronze_layer}/{batch_name}.parquet")
+        df = df.select("entry") \
+                .withColumn("entry", explode("entry"))
+        df.coalesce(OUTPUT_PARTITION).write.mode("overwrite").parquet(f"{bronze_layer}/{batch_name}.parquet")
         logger.info(f"Saved batch: {batch_name} to {bronze_layer}")
     except Exception as e:
         logger.error(f"Error saving batch {batch_name}: {e}")

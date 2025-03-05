@@ -1,0 +1,302 @@
+patient:
+  dim_patient:
+    source: patient
+    columns:
+      - patient_id AS patient_key
+      - gender
+      - birthDate AS birth_date
+      - deceasedDateTime AS deceased_date_time
+      - multipleBirth AS multiple_birth
+      - maritalStatus AS marital_status
+    transform:
+      to_date:
+          - birth_date
+      to_timestamp:
+          - deceased_date_time
+
+  dim_patient_name:
+    source: patient_name
+    columns:
+      - patient_id AS patient_key
+      - use AS name_use
+      - family AS last_name
+      - given AS first_name
+      - prefix
+      - suffix
+
+  dim_patient_address:
+    source: patient_address
+    columns:
+      - patient_id AS patient_key
+      - latitude
+      - longitude
+      - city
+      - state
+      - postalCode AS postal_code
+      - line AS address_line
+
+  dim_patient_telecom:
+    source: patient_telecom
+    columns:
+      - patient_id AS patient_key
+      - system AS telecom_system
+      - value AS telecom_value
+      - use AS telecom_use
+      - okay_to_leave_message
+
+  dim_patient_extension:
+    source: patient_extension
+    columns:
+      - patient_id AS patient_key
+      - type AS extension_type
+      - value AS extension_value
+
+encounter:
+  dim_encounter_type:
+    source: encounter_type
+    columns:
+      - code AS encounter_type_key
+      - display AS encounter_type_name
+
+  dim_encounter_reason:
+    source: encounter_reason
+    columns:
+      - code AS encounter_reason_key
+      - display AS encounter_reason_name
+
+  fact_encounter:
+    source: encounter
+    columns:
+      - encounter_id AS encounter_key
+      - patient_id AS patient_key
+      - status AS encounter_status
+      - class AS encounter_class
+      - type_code AS encounter_type_key
+      - reason_code AS encounter_reason_key
+      - periodStart AS period_start
+      - periodEnd AS period_end
+    transform:
+      to_timestamp:
+        - period_start
+        - period_end
+
+clinical:
+  dim_vaccine_code:
+    source: vaccine_code
+    columns:
+      - code AS vaccine_code_key
+      - display AS vaccine_name
+
+  dim_procedure_type:
+    source: procedure_type
+    columns:
+      - code AS procedure_type_key
+      - display AS procedure_type_name
+
+  dim_observation_code:
+    source: observation_code
+    columns:
+      - code AS observation_code_key
+      - display AS observation_name
+
+  dim_condition_code:
+    source: condition_code
+    columns:
+      - code AS condition_code_key
+      - display AS condition_name
+
+  dim_diagnostic_code:
+    source: diagnostic_code
+    columns:
+      - code AS diagnostic_code_key
+      - display AS diagnostic_name
+
+  dim_allergy_code:
+    source: allergy_code
+    columns:
+      - code AS allergy_code_key
+      - display AS allergy_name
+      - type
+      - category
+
+  dim_medication:
+    source: medication
+    columns:
+      - code AS medication_code_key
+      - display AS medication_name
+
+  fact_immunization:
+    source: immunization
+    columns:
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - vaccineCode AS vaccine_code_key
+      - date AS immunization_date
+      - status AS immunization_status
+      - wasNotGiven AS was_not_given
+      - primarySource AS primary_source
+    transform:
+      to_date:
+        - immunization_date
+
+  fact_procedure:
+    source: procedure
+    columns:
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - reasonReference AS reason_reference
+      - procedureType AS procedure_type_key
+      - status AS procedure_status
+      - performedPeriodStart AS performed_period_start
+      - performedPeriodEnd AS performed_period_end
+    transform:
+      to_timestamp:
+        - performed_period_start
+        - performed_period_end
+
+  fact_condition:
+    source: condition
+    columns:
+      - condition_id AS condition_key
+      - onsetDateTime AS onset_date_time
+      - clinicalStatus AS clinical_status
+      - verificationStatus AS verification_status
+      - code AS condition_code_key
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - abatementDateTime AS abatement_date_time
+    transform:
+      to_timestamp:
+        - onset_date_time
+        - abatement_date_time
+
+  fact_observation:
+    source: observation
+    columns:
+      - observation_id AS observation_key
+      - status AS observation_status
+      - issued AS issued
+      - effectiveDateTime AS effective_date_time
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - code AS observation_code_key
+    transform:
+      to_timestamp:
+        - issued
+        - effective_date_time
+
+  fact_observation_result:
+    source: observation_result
+    columns:
+      - observation_id AS observation_key
+      - code AS observation_code_key
+      - value AS observation_value
+      - unit AS observation_unit
+
+  fact_diagnostic_report:
+    source: diagnostic
+    columns:
+      - diagnostic_id AS diagnostic_key
+      - status AS diagnostic_status
+      - issued AS issued
+      - effectiveDateTime AS effective_date_time
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - report_code AS diagnostic_code_key
+    transform:
+      to_timestamp:
+        - issued
+        - effective_date_time
+
+  fact_diagnostic_result:
+    source: diagnostic_result
+    columns:
+      - diagnostic_id AS diagnostic_key
+      - result_id AS result_key
+      - display AS result_display
+
+  fact_allergy:
+    source: allergy
+    columns:
+      - criticality
+      - patient_id AS patient_key
+      - clinicalStatus AS clinical_status
+      - assertedDate AS asserted_date
+      - allergy_code AS allergy_code_key
+    transform:
+      to_date:
+        - asserted_date
+
+  fact_medication_request:
+    source: medication_request
+    columns:
+      - medication_request_id AS medication_request_key
+      - patient_id AS patient_key
+      - dateWritten AS date_written
+      - encounter_id AS encounter_key
+      - medicationCode AS medication_code_key
+      - status AS medication_request_status
+      - reasonReference AS reason_reference
+      - medication_class
+    transform:
+      to_date:
+        - date_written
+
+  fact_dosage_instruction:
+    source: dosage_instruction
+    columns:
+      - medication_request_id AS medication_request_key
+      - asNeededBoolean AS as_needed_boolean
+      - sequence
+      - frequency
+      - period
+      - periodUnit AS period_unit
+      - doseQuantity AS dose_quantity
+      - additionalInstructionsCode AS additional_instructions_code
+
+  fact_additional_instruction:
+    source: additional_instruction
+    columns:
+      - medication_request_id AS medication_request_key
+      - code AS additional_instruction_code
+      - display AS additional_instruction_display
+
+  fact_dispense_request:
+    source: dispense_request
+    columns:
+      - medication_request_id AS medication_request_key
+      - numberOfRepeatsAllowed AS number_of_repeats_allowed
+      - quantityValue AS quantity_value
+      - quantityUnit AS quantity_unit
+      - expectedSupplyDurationValue AS expected_supply_duration_value
+      - expectedSupplyDurationUnit AS expected_supply_duration_unit
+
+care:
+  dim_careplan_category:
+    source: careplan_category
+    columns:
+      - code AS careplan_category_key
+      - display AS careplan_category_name
+
+  dim_careplan_activity:
+    source: careplan_activity
+    columns:
+      - code AS careplan_activity_key
+      - display AS careplan_activity_name
+
+  fact_careplan:
+    source: careplan
+    columns:
+      - patient_id AS patient_key
+      - encounter_id AS encounter_key
+      - address_id AS address_key
+      - status AS careplan_status
+      - activityStatus AS careplan_activity_status
+      - periodStart AS period_start
+      - periodEnd AS period_end
+      - activityCode AS careplan_activity_code_key
+      - categoryCode AS careplan_category_key
+    transform:
+      to_date:
+      - period_start
+      - period_end
