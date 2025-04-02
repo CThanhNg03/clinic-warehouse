@@ -31,3 +31,4 @@ def transform_encounter(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         col("data.period.end").alias("periodEnd")
     )
     pass
+    return details_dfs

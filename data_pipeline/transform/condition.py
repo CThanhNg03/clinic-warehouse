@@ -23,3 +23,4 @@ def transform_condition(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         extract_id_udf(col("data.context.reference")).alias("encounter_id"),
         col("data.abatementDateTime").alias("abatementDateTime")
     )
+    return details_dfs

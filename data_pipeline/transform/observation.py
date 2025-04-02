@@ -59,3 +59,4 @@ def transform_observation(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]
         col("data.code.coding").getItem(0).getItem("code").alias("code")
     )
     pass
+    return details_dfs

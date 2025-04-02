@@ -22,4 +22,6 @@ def transform_allergy(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         col("data.assertedDate").alias("assertedDate"),
         col("coding.code").alias("allergy_code")
     )
+
+    return details_dfs
     pass

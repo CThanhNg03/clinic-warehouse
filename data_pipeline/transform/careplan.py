@@ -33,3 +33,4 @@ def transform_careplan(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
     )\
         .withColumn("categoryCode", from_json(col("categoryCode").getItem(0), careplan_category_schema).getItem("coding").getItem(0).getItem("code"))
     pass
+    return details_dfs

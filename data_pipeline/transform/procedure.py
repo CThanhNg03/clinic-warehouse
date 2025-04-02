@@ -34,3 +34,4 @@ def transform_procedure(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         ).otherwise(col("data.performedDateTime")).alias("performedPeriodEnd")
     )
     pass
+    return details_dfs

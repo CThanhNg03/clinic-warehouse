@@ -67,3 +67,4 @@ def transform_medication_request(df: pd.DataFrame, details_dfs: Dict[str, pd.Dat
     ).withColumn(
         "reasonReference", when(isnotnull(col("reasonReference")), extract_id_udf(col("reasonReference")))
     )
+    return details_dfs

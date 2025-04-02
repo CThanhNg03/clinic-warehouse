@@ -99,3 +99,4 @@ def transform_patient(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
     .withColumn("multipleBirth", when(isnull(col("multipleBirth")), col("multipleBirthInteger")).otherwise(col("multipleBirth").cast(IntegerType())))\
     .drop("multipleBirthInteger")
     pass
+    return details_dfs

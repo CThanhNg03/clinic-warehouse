@@ -4,7 +4,7 @@ from pyspark.sql.functions import col, explode
 
 from .udf import extract_id_udf
 
-def transform_immnunization(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
+def transform_immunization(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
     immunization = df.withColumn("coding", explode("data.vaccineCode.coding"))
 
     details_dfs["vaccine_code"] = immunization.select(
@@ -21,3 +21,4 @@ def transform_immnunization(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFram
         col("data.wasNotGiven").alias("wasNotGiven"),
         col("data.primarySource").alias("primarySource")
     )
+    return details_dfs

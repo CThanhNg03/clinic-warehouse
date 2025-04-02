@@ -29,3 +29,4 @@ def transform_diagnostic(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame])
         col("coding.code").alias("report_code")
     )
     pass
+    return details_dfs
