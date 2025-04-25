@@ -4,23 +4,22 @@ import os
 dotenv.load_dotenv(override=True)
 
 class SettingEnvironment:
+    DATABASE = os.getenv('STORAGE_NAME')
+    STORAGE_LOCATION = os.getenv('STORAGE_PATH')
+
+    BRONZE_LAYER = os.getenv('BRONZE_LAYER')
+    SILVER_LAYER = os.getenv('SILVER_LAYER')
+
+    INGESTED_BATCH_TABLE = os.getenv('INGESTED_BATCH_TABLE', 'ingested_batch')
+    TRANSFORMED_BATCH_TABLE = os.getenv('TRANSFORM_BATCH_TABLE', 'transformed_batch')
+    MODELED_BATCH_TABLE = os.getenv('MODELED_BATCH_TABLE', 'modeled_batch')
+
+    EHR_PATH = os.getenv('EHR_PATH')
+
+    WAREHOUSE_MODEL_YAML = os.getenv('WAREHOUSE_MODEL_YAML')
+
     def __init__(self):
         self.env = os.getenv('ENV')
-        self.ehr_source = os.getenv('EHR_PATH')
-        self.dicom_source = os.getenv('DICOM_PATH')
-        self.storage = {
-            'type': os.getenv('STORAGE_TYPE'),
-            'path': os.getenv('STORAGE_PATH'),
-            'host': os.getenv('STORAGE_HOST'),
-            'port': os.getenv('STORAGE_PORT'),
-            'user': os.getenv('STORAGE_USER'),
-        }
-        self.database = {
-            'uri': os.getenv('DATABASE_JDBC'),
-            'user': os.getenv('DATABASE_USER'),
-            'password': os.getenv('DATABASE_PASSWORD'),
-            'driver': os.getenv('DATABASE_DRIVER')
-        }
         
     def is_production(self):
         return self.env == 'production'

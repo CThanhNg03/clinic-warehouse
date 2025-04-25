@@ -4,7 +4,6 @@ import pyspark.sql as pd
 from pyspark.sql.functions import col, explode, collect_list, udf, lit, when, regexp_extract, concat_ws, isnull, array_size, isnotnull, from_json, to_date, to_timestamp
 from pyspark.sql.utils import AnalysisException
 
-from data_pipeline.utils import get_global_spark_session
 from config.settings import envi
 from data_pipeline import transform
 
@@ -14,13 +13,14 @@ class WarehouseTable:
     columns: List[str]
     transform: Optional[Dict[str, List[str]]]
     
-def get_warehouse_model() -> Dict[str, Dict[str, WarehouseTable]]:
-    import os
+def get_warehouse_model(yaml_path=None) -> Dict[str, Dict[str, WarehouseTable]]:
     import yaml
+    import os
 
-    module_path = os.path.abspath(__file__)
-    base_dir = os.path.dirname(module_path)
-    yaml_path = os.path.join(base_dir, 'transform', 'warehouse_model.yaml')
+    if not yaml_path:
+        module_path = os.path.abspath(__file__)
+        base_dir = os.path.dirname(module_path)
+        yaml_path = os.path.join(base_dir, 'transform', 'warehouse_model.yaml')
 
     with open(yaml_path, 'r') as file:
         warehouse_model = yaml.safe_load(file)
@@ -112,61 +112,50 @@ def model_data(dfs: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
     
     return models
 
-def write_to_silver(dfs: Dict[str, pd.DataFrame], dst: str, *, mode: str = "append"):
+def model_table(df: pd.DataFrame, schema: WarehouseTable) -> pd.DataFrame:
     """
-    Write a Spark DataFrame to a Silver layer table.
-    :param df: Spark DataFrame to write.
-    :param table_name: Name of the Silver layer table.
-    :param mode: Write mode (default is "append").
+    This function models the data into dimensions and facts for a data warehouse.
+    :param df: DataFrame to be modeled.
+    :param schema: WarehouseTable object containing the schema information.
+    :return: DataFrame modeled into dimensions and facts with schema prefix.
     """
-    for df in dfs:
-        dfs[df].write.mode("overwrite").parquet(f"{dst}/{df}")
+    model = df.selectExpr(schema.columns)
+    
+    if schema.transform:
+        if schema.transform["to_date"]:
+            for field in schema.transform["to_date"]:
+                model = model.withColumn(field, to_date(col(field), "yyyy-MM-dd"))
+        if schema.transform["to_timestamp"]:
+            for field in schema.transform["to_timestamp"]:
+                model = model.withColumn(field, to_timestamp(col(field), "yyyy-MM-dd'T'HH:mm:ss"))
+    
+    return model
 
-def write_to_postgres(df: pd.DataFrame, table_name: str, *, mode: str = "append"):
-    """
-    Write a Spark DataFrame to a PostgreSQL table.
-    :param df: Spark DataFrame to write.
-    :param table_name: Name of the PostgreSQL table.
-    :param mode: Write mode (default is "append").
-    """
-
-    jdbc_url = f"{envi.database['uri']}warehouse"
-    properties = {
-        "user": envi.database["user"],
-        "password": envi.database["password"],
-        "driver": envi.database["driver"]
-    }
-    try:
-        df.drop_duplicates() \
-            .write \
-            .mode("append") \
-            .option("truncate", "false") \
-            .option("isolationLevel", "NONE") \
-            .option("sessionInitStatement", "SET session_replication_role = replica;") \
-            .jdbc(url=jdbc_url, table=table_name, mode=mode, properties=properties)
-            
-    except AnalysisException as e:
-        print(f"Error writing to table {table_name}: {e}")
 
 if __name__ == "__main__":
-    spark = get_global_spark_session()
+    from data_pipeline.data_sinking import write_to_postgres
+    from data_pipeline.utils import get_spark_session
 
-    import os
-    import dotenv
+    # spark = get_spark_session()
 
-    dotenv.load_dotenv()
+    # import os
+    # import dotenv
 
-    bronze_layer = os.environ.get("BRONZE_LAYER")
-    silver_layer = os.environ.get("SILVER_LAYER")
+    # dotenv.load_dotenv()
+
+    # bronze_layer = os.environ.get("BRONZE_LAYER")
+    # silver_layer = os.environ.get("SILVER_LAYER")
     
-    path = os.listdir(bronze_layer)
+    # path = os.listdir(bronze_layer)
 
-    detail_dfs = transform_data(spark.read.parquet(f"{bronze_layer}/{path[0]}"))
-    # for df in path:
-    #     detail_dfs[df] = spark.read.parquet(f"{silver_layer}/{df}")
+    # detail_dfs = transform_data(spark.read.parquet(f"{bronze_layer}/{path[0]}"))
+    # # for df in path:
+    # #     detail_dfs[df] = spark.read.parquet(f"{silver_layer}/{df}")
         
-    models = model_data(detail_dfs)
-    for df in models:
-        if df not in ["care.fact_careplan"]:
-            continue
-        write_to_postgres(models[df], df)
+    # models = model_data(detail_dfs)
+    # for df in models:
+    #     if df not in ["care.fact_careplan"]:
+    #         continue
+    #     write_to_postgres(models[df], df)
+
+    print('Hello World')

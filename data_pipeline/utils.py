@@ -1,23 +1,45 @@
+from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
-def get_global_spark_session() -> SparkSession:
+
+def get_spark_session(app_name: str, **job_config) -> SparkSession:
     """
-    This function returns a spark session.
+    Creates and returns a Spark session with dynamic configurations.
+
+    Args:
+        app_name (str): The name of the Spark job.
+        master (str, optional): The Spark master URL (default: "local[*]").
+        **job_config: Additional Spark configurations as key-value pairs.
+
+    Returns:
+        SparkSession: The configured Spark session.
     """
+    config = SparkConf().setAppName(app_name)
+    # Apply additional configurations if provided
+    for key, value in job_config.items():
+        config.set(key, value)
+
     return SparkSession.builder \
-        .appName("EHR") \
-        .master("local[*]") \
-        .config("spark.executor.memory", "3g") \
-        .config("spark.sql.parquet.columnReaderBatchSize", "1024") \
-        .config("spark.sql.parquet.enableVectorizedReader", "false") \
-        .config("spark.executor.cores", "2") \
-        .config("spark.executor.extraClassPath", "/mnt/e/Thesis/project/.data/postgresql-42.7.4.jar") \
-        .config("spark.jars.packages", "org.postgresql:postgresql:42.7.4") \
-        .config("spark.sql.legacy.timeParserPolicy", "LEGACY") \
+        .config(conf=config) \
+        .enableHiveSupport() \
         .getOrCreate()
 
-def log(message: str):
-    """
-    This function logs a message.
-    """
-    pass
+class Debug():
+    iteration_num = 1
+
+    @classmethod
+    def debug_loop(cls, msg, iterations = None):
+        if not iterations:
+            iterations = [1]
+
+        if cls.iteration_num in iterations:
+            print(f"Debug in {cls.iteration_num}: {msg}")
+        cls.iteration_num += 1
+
+    @classmethod
+    def reset(cls):
+        cls.iteration_num = 1
+    
+    @classmethod
+    def debug(cls, msg):
+        print(f"Debug: {msg}")
