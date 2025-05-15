@@ -1,6 +1,6 @@
 from typing import Dict
 import pyspark.sql.dataframe as pd
-from pyspark.sql.functions import col, explode, lit, when, concat_ws, size, from_json, isnotnull
+from pyspark.sql.functions import col, explode, lit, when, concat_ws, size, from_json
 
 from .udf import extract_id_udf
 from .schema import reason_reference_schema
@@ -65,6 +65,6 @@ def transform_medication_request(df: pd.DataFrame, details_dfs: Dict[str, pd.Dat
     ).withColumn(
         "reasonReference", from_json(col("reasonReference"), reason_reference_schema).getItem(0).getItem("reference")
     ).withColumn(
-        "reasonReference", when(isnotnull(col("reasonReference")), extract_id_udf(col("reasonReference")))
+        "reasonReference", when(col("reasonReference").isNotNull(), extract_id_udf(col("reasonReference")))
     )
     return details_dfs
