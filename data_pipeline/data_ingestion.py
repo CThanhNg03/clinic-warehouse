@@ -37,6 +37,9 @@ def create_bronze_metadata_table(spark: SparkSession):
                 source STRING
             )
             STORED AS PARQUET
+            TBLPROPERTIES (
+                'transactional' = 'true'
+            )
         """)
     except AnalysisException as e:
         logger.error(f"Error creating bronze metadata table: {e}")

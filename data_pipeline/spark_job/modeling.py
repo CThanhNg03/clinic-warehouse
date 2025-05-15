@@ -25,8 +25,9 @@ def create_metadata_table(spark: SparkSession, silver_layer: str):
             source STRING
         )
         STORED AS PARQUET
-        STORED BY ICEBERG
-        LOCATION '{silver_layer}/metadata'
+        TBLPROPERTIES (
+            'transactional' = 'true'
+        )
     """)
 
 def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
