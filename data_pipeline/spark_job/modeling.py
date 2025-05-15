@@ -123,6 +123,7 @@ def main():
                 continue
             model = model_table(df, meta)
             write_to_postgres(model, f"{schema}.{table}")
+            logger.info(f"Data written to {schema}.{table} for batch ID {batch_id}.")
 
 if __name__ == "__main__":
     main()
