@@ -35,7 +35,7 @@ def get_warehouse_model(yaml_path=None) -> Dict[str, Dict[str, WarehouseTable]]:
                 columns=columns,
                 transform=transform
             )
-            
+
     return warehouse_model
 
 def transform_resource_type(df: pd.DataFrame, resource_type: str) -> Dict[str, pd.DataFrame]:
@@ -150,7 +150,7 @@ def model_table(df: pd.DataFrame, schema: WarehouseTable) -> pd.DataFrame:
                 model = model.withColumn(field, to_date(col(field), "yyyy-MM-dd"))
         if schema.transform["to_timestamp"]:
             for field in schema.transform["to_timestamp"]:
-                model = model.withColumn(field, to_timestamp(col(field), "yyyy-MM-dd'T'HH:mm:ss"))
+                model = model.withColumn(field, to_timestamp(col(field), "yyyy-MM-dd'T'HH:mm:ssXXX"))
     
     return model
 
