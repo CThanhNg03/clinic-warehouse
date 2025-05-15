@@ -132,7 +132,7 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
         logger.error(f"Error writing to silver layer: {e}")
         if "cannot be found" in str(e):
             create_metadata_table(spark, STORAGE_LOCATION)
-            write_to_silver(transform_dfs, DATABASE, transform_batch, mode="create")
+            write_to_silver(spark, transform_dfs, DATABASE, transform_batch, mode="create")
         else:
             raise e
     finally:

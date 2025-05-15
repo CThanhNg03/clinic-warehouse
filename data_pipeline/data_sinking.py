@@ -9,6 +9,7 @@ from config.logger import logger
 TRANSFORMED_BATCH_TABLE = envi.TRANSFORMED_BATCH_TABLE
 MODELED_BATCH_TABLE = envi.MODELED_BATCH_TABLE
 DATABASE = envi.DATABASE
+STORAGE_PATH = envi.STORAGE_LOCATION
 
 
 def create_metadata_table(spark: pd.SparkSession, layer: str):
@@ -112,25 +113,27 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
         table_type: Table type, either "hive" or "iceberg" (default is "hive").
     """
     for table_name, df in dfs.items():
-        writer = df.withColumn("batch_id", lit(batch_id)) \
-            .writeTo(f"{dst}.{table_name}") 
-        
-        if table_type == "hive":
-            writer.tableProperty("format", format)
-        
-        if table_type != "iceberg" and table_type != "hive":
-            raise ValueError("Unsupported table type. Supported types are 'hive' and 'iceberg'.")
-        
-        try:
-            writer.append()
+        df = df.withColumn("batch_id", lit(batch_id))
+        table_full_name = f"{dst}.{table_name}"
+        external_path = f"{STORAGE_PATH}/{dst}/{table_name}"  # Customize your path
 
+        try:
+            df.write \
+                .format(format) \
+                .mode("append") \
+                .saveAsTable(table_full_name)
         except AnalysisException as e:
-            if "not found" in str(e):
-                writer.create()
-                logger.info(f"Table {table_name} created successfully.")
+            if "Table or view not found" in str(e) or "not found" in str(e):
+                df.write \
+                    .format(format) \
+                    .mode("overwrite") \
+                    .option("path", external_path) \
+                    .saveAsTable(table_full_name)
+                logger.info(f"Created new external table: {table_full_name}")
             else:
-                logger.error(f"Error writing to table {table_name}: {e}")
+                logger.error(f"Failed to write table {table_full_name}: {e}")
                 raise e
+
 def write_to_postgres(df: pd.DataFrame, table_name: str, *, mode: str = "append"):
     """
     Write a Spark DataFrame to a PostgreSQL table.
