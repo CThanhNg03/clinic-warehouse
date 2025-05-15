@@ -36,7 +36,7 @@ def create_bronze_metadata_table(spark: SparkSession):
                 save_ts TIMESTAMP,
                 source STRING
             )
-            STORED AS PARQUET
+            STORED AS ORC
             TBLPROPERTIES (
                 'transactional' = 'true'
             )
