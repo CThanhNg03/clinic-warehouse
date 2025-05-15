@@ -63,6 +63,20 @@ def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
         create_metadata_table(spark, envi.SILVER_LAYER)
         return None
     
+def save_batch_id(spark, batch_id):
+    """
+    This function saves the batch ID to the metadata table.
+    """
+    try:
+        spark.sql(f"""
+            INSERT INTO {DATABASE}.{MODELED_BATCH_TABLE} (batch_id, save_ts, source)
+            VALUES ({batch_id}, CURRENT_TIMESTAMP(), 'local')
+        """)
+    except AnalysisException as e:
+        logger.error(f"Error saving batch ID {batch_id}: {e}")
+        raise e
+
+    
 def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
     """
     This function retrieves the next unprocessed batch from the transformed data.
@@ -126,6 +140,9 @@ def main():
             model = model_table(df, meta)
             write_to_postgres(model, f"{schema}.{table}")
             logger.info(f"Data written to {schema}.{table} for batch ID {batch_id}.")
+    
+    # Save the batch ID to the metadata table
+    save_batch_id(spark, batch_id)
 
 if __name__ == "__main__":
     main()
