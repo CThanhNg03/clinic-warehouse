@@ -19,6 +19,8 @@ def create_metadata_table(spark: SparkSession, silver_layer: str):
     """
     spark.sql(f"""
         CREATE DATABASE IF NOT EXISTS {DATABASE}
+    """)
+    spark.sql(f"""
         CREATE TABLE IF NOT EXISTS {DATABASE}.{MODELED_BATCH_TABLE} (
             batch_id INT,
             save_ts TIMESTAMP,
