@@ -126,7 +126,7 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
 
     try:
         # Write transformed data to silver layer
-        write_to_silver(transform_dfs, DATABASE, mode="append")
+        write_to_silver(spark, transform_dfs, DATABASE, transform_batch, mode="append")
 
     except AnalysisException as e:
         logger.error(f"Error writing to silver layer: {e}")
