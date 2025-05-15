@@ -101,7 +101,7 @@ def save_batch_id(spark: pd.SparkSession, batch_id: int, layer: str = 'gold'):
             logger.error(f"Error saving batch ID {batch_id}: {e}")
             raise e
 
-def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: str, batch_id: int, *, mode: str = "append", format: str = "parquet", table_type: str = "hive"):
+def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: str, batch_id: int, *, mode: str = "append", format: str = "orc", table_type: str = "hive"):
     """
     Write Spark DataFrames to a Silver layer table, adaptable for Hive and Iceberg.
 
@@ -124,13 +124,12 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
                 .saveAsTable(table_full_name)
         except AnalysisException as e:
             if "Table or view not found" in str(e) or "not found" in str(e):
-                df.write \
-                    .format(format) \
-                    .mode("overwrite") \
-                    .option("path", external_path) \
-                    .option("transactional", "true") \
-                    .option("mergeSchema", "true") \
-                    .saveAsTable(table_full_name)
+                df.createOrReplaceTempView(f'temp_{table_name}')
+                spark.sql(f"""
+                          CREATE TABLE {table_full_name} PARTITIONED BY (batch_id)
+                          AS SELECT * FROM temp_{table_name}
+                          """)
+                
                 logger.info(f"Created new external table: {table_full_name}")
             else:
                 logger.error(f"Failed to write table {table_full_name}: {e}")
