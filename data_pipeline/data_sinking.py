@@ -115,20 +115,22 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
     for table_name, df in dfs.items():
         df = df.withColumn("batch_id", lit(batch_id))
         table_full_name = f"{dst}.{table_name}"
-        external_path = f"{STORAGE_PATH}/{dst}/{table_name}"  # Customize your path
+        external_path = f"{STORAGE_PATH}/{dst},db/{table_name}"  # Customize your path
 
         try:
             df.write \
                 .format(format) \
                 .mode("append") \
-                .insertInto(table_full_name)
+                .saveAsTable(table_full_name)
         except AnalysisException as e:
             if "Table or view not found" in str(e) or "not found" in str(e):
                 df.write \
                     .format(format) \
                     .mode("overwrite") \
                     .option("path", external_path) \
-                    .insertInto(table_full_name)
+                    .option("transactional", "true") \
+                    .option("mergeSchema", "true") \
+                    .saveAsTable(table_full_name)
                 logger.info(f"Created new external table: {table_full_name}")
             else:
                 logger.error(f"Failed to write table {table_full_name}: {e}")
