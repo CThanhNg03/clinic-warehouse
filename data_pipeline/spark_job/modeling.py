@@ -102,7 +102,9 @@ def main():
     YAML_FILE = envi.WAREHOUSE_MODEL_YAML
 
     # Initialize Spark session
-    spark = get_spark_session(app_name="Modeling Data")
+    spark = get_spark_session("Modeling Data", {
+        "spark.sql.legacy.timeParserPolicy":"LEGACY"
+    })
 
     warehouse_model = get_warehouse_model(YAML_FILE)
     

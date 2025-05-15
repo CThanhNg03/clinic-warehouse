@@ -272,6 +272,441 @@ CREATE TABLE care.fact_careplan (
     FOREIGN KEY (encounter_key) REFERENCES encounter.fact_encounter(encounter_key)
 );
 
+-- Upsert triggers for tables with unique keys
+
+-- patient.dim_patient
+CREATE OR REPLACE FUNCTION patient_dim_patient_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE patient.dim_patient
+    SET
+        gender = NEW.gender,
+        birth_date = NEW.birth_date,
+        deceased_date_time = NEW.deceased_date_time,
+        multiple_birth = NEW.multiple_birth,
+        marital_status = NEW.marital_status
+    WHERE patient_key = NEW.patient_key;
 
 
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_patient_dim_patient_upsert ON patient.dim_patient;
+
+CREATE TRIGGER trg_patient_dim_patient_upsert
+BEFORE INSERT ON patient.dim_patient
+FOR EACH ROW
+EXECUTE FUNCTION patient_dim_patient_upsert();
+
+-- encounter.dim_encounter_type
+CREATE OR REPLACE FUNCTION encounter_dim_encounter_type_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE encounter.dim_encounter_type
+    SET
+        encounter_type_name = NEW.encounter_type_name
+    WHERE encounter_type_key = NEW.encounter_type_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_encounter_dim_encounter_type_upsert ON encounter.dim_encounter_type;
+
+CREATE TRIGGER trg_encounter_dim_encounter_type_upsert
+BEFORE INSERT ON encounter.dim_encounter_type
+FOR EACH ROW
+EXECUTE FUNCTION encounter_dim_encounter_type_upsert();
+
+-- encounter.dim_encounter_reason
+CREATE OR REPLACE FUNCTION encounter_dim_encounter_reason_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE encounter.dim_encounter_reason
+    SET
+        encounter_reason_name = NEW.encounter_reason_name
+    WHERE encounter_reason_key = NEW.encounter_reason_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_encounter_dim_encounter_reason_upsert ON encounter.dim_encounter_reason;
+
+CREATE TRIGGER trg_encounter_dim_encounter_reason_upsert
+BEFORE INSERT ON encounter.dim_encounter_reason
+FOR EACH ROW
+EXECUTE FUNCTION encounter_dim_encounter_reason_upsert();
+
+-- encounter.fact_encounter
+CREATE OR REPLACE FUNCTION encounter_fact_encounter_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE encounter.fact_encounter
+    SET
+        patient_key = NEW.patient_key,
+        encounter_status = NEW.encounter_status,
+        encounter_class = NEW.encounter_class,
+        encounter_type_key = NEW.encounter_type_key,
+        encounter_reason_key = NEW.encounter_reason_key,
+        period_start = NEW.period_start,
+        period_end = NEW.period_end
+    WHERE encounter_key = NEW.encounter_key;
+
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_encounter_fact_encounter_upsert ON encounter.fact_encounter;
+
+CREATE TRIGGER trg_encounter_fact_encounter_upsert
+BEFORE INSERT ON encounter.fact_encounter
+FOR EACH ROW
+EXECUTE FUNCTION encounter_fact_encounter_upsert();
+
+-- clinical.dim_vaccine_code
+CREATE OR REPLACE FUNCTION clinical_dim_vaccine_code_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_vaccine_code
+    SET
+        vaccine_name = NEW.vaccine_name
+    WHERE vaccine_code_key = NEW.vaccine_code_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_vaccine_code_upsert ON clinical.dim_vaccine_code;
+
+CREATE TRIGGER trg_clinical_dim_vaccine_code_upsert
+BEFORE INSERT ON clinical.dim_vaccine_code
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_vaccine_code_upsert();
+
+-- clinical.dim_procedure_type
+CREATE OR REPLACE FUNCTION clinical_dim_procedure_type_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_procedure_type
+    SET
+        procedure_type_name = NEW.procedure_type_name
+    WHERE procedure_type_key = NEW.procedure_type_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_procedure_type_upsert ON clinical.dim_procedure_type;
+
+CREATE TRIGGER trg_clinical_dim_procedure_type_upsert
+BEFORE INSERT ON clinical.dim_procedure_type
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_procedure_type_upsert();
+
+-- clinical.dim_observation_code
+CREATE OR REPLACE FUNCTION clinical_dim_observation_code_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_observation_code
+    SET
+        observation_name = NEW.observation_name
+    WHERE observation_code_key = NEW.observation_code_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_observation_code_upsert ON clinical.dim_observation_code;
+
+CREATE TRIGGER trg_clinical_dim_observation_code_upsert
+BEFORE INSERT ON clinical.dim_observation_code
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_observation_code_upsert();
+
+-- clinical.dim_condition_code
+CREATE OR REPLACE FUNCTION clinical_dim_condition_code_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_condition_code
+    SET
+        condition_name = NEW.condition_name
+    WHERE condition_code_key = NEW.condition_code_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_condition_code_upsert ON clinical.dim_condition_code;
+
+CREATE TRIGGER trg_clinical_dim_condition_code_upsert
+BEFORE INSERT ON clinical.dim_condition_code
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_condition_code_upsert();
+
+-- clinical.dim_medication
+CREATE OR REPLACE FUNCTION clinical_dim_medication_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_medication
+    SET
+        medication_name = NEW.medication_name
+    WHERE medication_code_key = NEW.medication_code_key;
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_medication_upsert ON clinical.dim_medication;
+
+CREATE TRIGGER trg_clinical_dim_medication_upsert
+BEFORE INSERT ON clinical.dim_medication
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_medication_upsert();
+
+-- clinical.dim_diagnostic_code
+CREATE OR REPLACE FUNCTION clinical_dim_diagnostic_code_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_diagnostic_code
+    SET
+        diagnostic_name = NEW.diagnostic_name
+    WHERE diagnostic_code_key = NEW.diagnostic_code_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_diagnostic_code_upsert ON clinical.dim_diagnostic_code;
+
+CREATE TRIGGER trg_clinical_dim_diagnostic_code_upsert
+BEFORE INSERT ON clinical.dim_diagnostic_code
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_diagnostic_code_upsert();
+
+-- clinical.dim_allergy_code
+CREATE OR REPLACE FUNCTION clinical_dim_allergy_code_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.dim_allergy_code
+    SET
+        allergy_name = NEW.allergy_name,
+        type = NEW.type,
+        category = NEW.category
+    WHERE allergy_code_key = NEW.allergy_code_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_dim_allergy_code_upsert ON clinical.dim_allergy_code;
+
+CREATE TRIGGER trg_clinical_dim_allergy_code_upsert
+BEFORE INSERT ON clinical.dim_allergy_code
+FOR EACH ROW
+EXECUTE FUNCTION clinical_dim_allergy_code_upsert();
+
+-- clinical.fact_condition
+CREATE OR REPLACE FUNCTION clinical_fact_condition_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.fact_condition
+    SET
+        onset_date_time = NEW.onset_date_time,
+        clinical_status = NEW.clinical_status,
+        verification_status = NEW.verification_status,
+        condition_code_key = NEW.condition_code_key,
+        patient_key = NEW.patient_key,
+        encounter_key = NEW.encounter_key,
+        abatement_date_time = NEW.abatement_date_time
+    WHERE condition_key = NEW.condition_key;    
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_fact_condition_upsert ON clinical.fact_condition;
+
+CREATE TRIGGER trg_clinical_fact_condition_upsert
+BEFORE INSERT ON clinical.fact_condition
+FOR EACH ROW
+EXECUTE FUNCTION clinical_fact_condition_upsert();
+
+-- clinical.fact_observation
+CREATE OR REPLACE FUNCTION clinical_fact_observation_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.fact_observation
+    SET
+        observation_status = NEW.observation_status,
+        issued = NEW.issued,
+        effective_date_time = NEW.effective_date_time,
+        patient_key = NEW.patient_key,
+        encounter_key = NEW.encounter_key,
+        observation_code_key = NEW.observation_code_key
+    WHERE observation_key = NEW.observation_key;
+
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_fact_observation_upsert ON clinical.fact_observation;
+
+CREATE TRIGGER trg_clinical_fact_observation_upsert
+BEFORE INSERT ON clinical.fact_observation
+FOR EACH ROW
+EXECUTE FUNCTION clinical_fact_observation_upsert();
+
+-- clinical.fact_additional_instruction
+CREATE OR REPLACE FUNCTION clinical_fact_additional_instruction_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.fact_additional_instruction
+    SET
+        additional_instruction_display = NEW.additional_instruction_display,
+        additional_instruction_code = NEW.additional_instruction_code
+    WHERE medication_request_key = NEW.medication_request_key;
+    
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_fact_additional_instruction_upsert ON clinical.fact_additional_instruction;
+
+CREATE TRIGGER trg_clinical_fact_additional_instruction_upsert
+BEFORE INSERT ON clinical.fact_additional_instruction
+FOR EACH ROW
+EXECUTE FUNCTION clinical_fact_additional_instruction_upsert();
+
+-- clinical.fact_diagnostic_report
+CREATE OR REPLACE FUNCTION clinical_fact_diagnostic_report_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE clinical.fact_diagnostic_report
+    SET
+        diagnostic_status = NEW.diagnostic_status,
+        issued = NEW.issued,
+        effective_date_time = NEW.effective_date_time,
+        patient_key = NEW.patient_key,
+        encounter_key = NEW.encounter_key,
+        diagnostic_code_key = NEW.diagnostic_code_key
+    WHERE diagnostic_key = NEW.diagnostic_key;
+    
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_clinical_fact_diagnostic_report_upsert ON clinical.fact_diagnostic_report;
+
+CREATE TRIGGER trg_clinical_fact_diagnostic_report_upsert
+BEFORE INSERT ON clinical.fact_diagnostic_report
+FOR EACH ROW
+EXECUTE FUNCTION clinical_fact_diagnostic_report_upsert();
+
+-- care.dim_careplan_category
+CREATE OR REPLACE FUNCTION care_dim_careplan_category_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE care.dim_careplan_category
+    SET
+        careplan_category_name = NEW.careplan_category_name
+    WHERE careplan_category_key = NEW.careplan_category_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_care_dim_careplan_category_upsert ON care.dim_careplan_category;
+
+CREATE TRIGGER trg_care_dim_careplan_category_upsert
+BEFORE INSERT ON care.dim_careplan_category
+FOR EACH ROW
+EXECUTE FUNCTION care_dim_careplan_category_upsert();
+
+-- care.dim_careplan_activity
+CREATE OR REPLACE FUNCTION care_dim_careplan_activity_upsert() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE care.dim_careplan_activity
+    SET
+        careplan_activity_name = NEW.careplan_activity_name
+    WHERE careplan_activity_key = NEW.careplan_activity_key;
+
+    IF NOT FOUND THEN
+        RETURN NEW; -- Allow insert to proceed
+    ELSE
+        RETURN NULL; -- Prevent insert (already updated)
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_care_dim_careplan_activity_upsert ON care.dim_careplan_activity;
+
+CREATE TRIGGER trg_care_dim_careplan_activity_upsert
+BEFORE INSERT ON care.dim_careplan_activity
+FOR EACH ROW
+EXECUTE FUNCTION care_dim_careplan_activity_upsert();
