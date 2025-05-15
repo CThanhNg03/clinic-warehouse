@@ -121,14 +121,14 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
             df.write \
                 .format(format) \
                 .mode("append") \
-                .saveAsTable(table_full_name)
+                .insertInto(table_full_name)
         except AnalysisException as e:
             if "Table or view not found" in str(e) or "not found" in str(e):
                 df.write \
                     .format(format) \
                     .mode("overwrite") \
                     .option("path", external_path) \
-                    .saveAsTable(table_full_name)
+                    .insertInto(table_full_name)
                 logger.info(f"Created new external table: {table_full_name}")
             else:
                 logger.error(f"Failed to write table {table_full_name}: {e}")

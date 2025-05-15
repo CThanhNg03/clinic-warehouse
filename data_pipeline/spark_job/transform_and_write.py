@@ -127,18 +127,9 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
     try:
         # Write transformed data to silver layer
         write_to_silver(spark, transform_dfs, DATABASE, transform_batch, mode="append")
-
+        save_transformed_batch_id(spark, transform_batch, STORAGE_LOCATION, source)
     except AnalysisException as e:
         logger.error(f"Error writing to silver layer: {e}")
-        if "cannot be found" in str(e):
-            create_metadata_table(spark, STORAGE_LOCATION)
-            write_to_silver(spark, transform_dfs, DATABASE, transform_batch, mode="create")
-        else:
-            raise e
-    finally:
-        # Save transformed batch ID
-        save_transformed_batch_id(spark, transform_batch, STORAGE_LOCATION, source)
-        logger.info(f"Transformed batch ID {transform_batch} saved successfully.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transform and write data to silver layer")
