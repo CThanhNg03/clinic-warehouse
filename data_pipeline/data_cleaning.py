@@ -145,10 +145,10 @@ def model_table(df: pd.DataFrame, schema: WarehouseTable) -> pd.DataFrame:
     model = df.selectExpr(schema.columns)
     
     if schema.transform:
-        if schema.transform["to_date"]:
+        if schema.transform.get("to_date"):
             for field in schema.transform["to_date"]:
                 model = model.withColumn(field, to_date(col(field), "yyyy-MM-dd"))
-        if schema.transform["to_timestamp"]:
+        if schema.transform.get("to_timestamp"):
             for field in schema.transform["to_timestamp"]:
                 model = model.withColumn(field, to_timestamp(col(field), "yyyy-MM-dd'T'HH:mm:ssXXX"))
     
