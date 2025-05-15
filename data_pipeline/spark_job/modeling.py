@@ -118,7 +118,7 @@ def main():
         for table in tables:
             meta = tables[table]
             df = spark.sql(f"SELECT * FROM {DATABASE}.{meta.source} WHERE batch_id = {batch_id}")
-            if df.isEmpty():
+            if df.count() == 0:
                 logger.info(f"No data found for batch ID {batch_id} in table {meta.source}.")
                 continue
             model = model_table(df, meta)
