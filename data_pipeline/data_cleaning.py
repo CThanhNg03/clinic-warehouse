@@ -57,6 +57,18 @@ def transform_resource_type(df: pd.DataFrame, resource_type: str) -> Dict[str, p
         details_dfs = transform_function(df, details_dfs)
     return details_dfs
 
+def get_resource_type(df: pd.DataFrame) -> List[str]:
+    """
+    This function retrieves the unique resource types from the DataFrame.
+    :param df: DataFrame to be processed.
+    :return: List of unique resource types.
+    """
+    df = df.select("resourceType").dropna().repartition(100)
+
+    distinct_values = df.distinct()
+
+    return [row["resourceType"] for row in distinct_values.collect()]
+
 def transform_data(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
     """
     This function transforms data from file data with json columns to a flat table.
@@ -72,7 +84,7 @@ def transform_data(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         .drop("entries")\
         .select("resourceType", col("data.resource").alias("data")).persist()
     
-    unique_resourceTypes = [row.resourceType for row in df.repartition(100, "resourceType").select("resourceType").dropDuplicates().collect()]
+    unique_resourceTypes = get_resource_type(df)
 
     # Create a dictionary to store the transformed data
     details_dfs: Dict[str, pd.DataFrame] = {}

@@ -1,6 +1,7 @@
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
+from config.settings import envi
 
 def get_spark_session(app_name: str, **job_config) -> SparkSession:
     """
@@ -20,6 +21,7 @@ def get_spark_session(app_name: str, **job_config) -> SparkSession:
         config.set(key, value)
 
     return SparkSession.builder \
+        .config("spark.sql.warehouse.dir", envi.STORAGE_LOCATION) \
         .config(conf=config) \
         .enableHiveSupport() \
         .getOrCreate()
