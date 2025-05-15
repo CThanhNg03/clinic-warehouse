@@ -1,6 +1,7 @@
 from typing import Dict
 import pyspark.sql as pd
 from pyspark.sql.utils import AnalysisException
+from pyspark.sql.functions import lit
 
 from config.settings import envi
 from config.logger import logger
@@ -111,7 +112,7 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
         table_type: Table type, either "hive" or "iceberg" (default is "hive").
     """
     for table_name, df in dfs.items():
-        writer = df.withColumn("batch_id", batch_id) \
+        writer = df.withColumn("batch_id", lit(batch_id)) \
             .writeTo(f"{dst}.{table_name}") 
         
         if table_type == "hive":
