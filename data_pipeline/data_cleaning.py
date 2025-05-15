@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 import pyspark.sql as pd    
-from pyspark.sql.functions import col, explode, collect_list, udf, lit, when, regexp_extract, concat_ws, isnull, array_size, isnotnull, from_json, to_date, to_timestamp
+from pyspark.sql.functions import col, explode, collect_list, udf, lit, when, regexp_extract, concat_ws, isnull, isnotnull, from_json, to_date, to_timestamp
 from pyspark.sql.utils import AnalysisException
 
 from config.settings import envi

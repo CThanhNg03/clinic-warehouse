@@ -1,6 +1,6 @@
 from typing import Dict
 import pyspark.sql.dataframe as pd
-from pyspark.sql.functions import col, explode, lit, when, concat_ws, array_size, from_json, isnotnull
+from pyspark.sql.functions import col, explode, lit, when, concat_ws, size, from_json, isnotnull
 
 from .udf import extract_id_udf
 from .schema import reason_reference_schema
@@ -12,7 +12,7 @@ def transform_medication_request(df: pd.DataFrame, details_dfs: Dict[str, pd.Dat
                         col("data.medicationCodeableConcept.coding").getItem(0).getItem("code") ) \
             .withColumn("medication_request_id", concat_ws("_", "context_id", "medication_code")) \
             .withColumn("medication_class",
-                    when(array_size(col("data.dosageInstruction")) == 0, lit("no instructions")) \
+                    when(size(col("data.dosageInstruction")) == 0, lit("no instructions")) \
                     .when(col("data.dosageInstruction").getItem(0).getItem("asNeededBoolean"), lit("as needed")) \
                     .otherwise(lit("scheduled")))
     
