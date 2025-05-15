@@ -1,6 +1,6 @@
 from typing import Dict
 import pyspark.sql.dataframe as pd
-from pyspark.sql.functions import col, explode, from_json, isnotnull, lit, regexp_extract, when
+from pyspark.sql.functions import col, explode, from_json, lit, regexp_extract, when
 
 from .udf import extract_id_udf
 from .schema import procedure_reason_schema
@@ -25,11 +25,11 @@ def transform_procedure(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         col("data.code.coding").getItem(0).getItem("code").alias("procedureType"),
         col("data.status").alias("status"),
         when(
-        isnotnull(col("data.performedPeriod.start")),
+        col("data.performedPeriod.start").isNotNull(),
         col("data.performedPeriod.start")
         ).otherwise(col("data.performedDateTime")).alias("performedPeriodStart"),
         when(
-        isnotnull(col("data.performedPeriod.end")),
+        col("data.performedPeriod.end").isNotNull(),
         col("data.performedPeriod.end")
         ).otherwise(col("data.performedDateTime")).alias("performedPeriodEnd")
     )

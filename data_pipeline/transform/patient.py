@@ -1,6 +1,6 @@
 from typing import Dict
 import pyspark.sql.dataframe as pd
-from pyspark.sql.functions import col, explode, lit, regexp_extract, when, concat_ws, isnull
+from pyspark.sql.functions import col, explode, lit, regexp_extract, when, concat_ws
 from pyspark.sql.types import IntegerType
 
 from .udf import extract_display_udf
@@ -96,7 +96,7 @@ def transform_patient(df: pd.DataFrame, details_dfs: Dict[str, pd.DataFrame]):
         col("data.multipleBirthInteger").alias("multipleBirthInteger"),
         col("data.maritalStatus.coding").getItem(0).getItem("code").alias("maritalStatus")
     )\
-    .withColumn("multipleBirth", when(isnull(col("multipleBirth")), col("multipleBirthInteger")).otherwise(col("multipleBirth").cast(IntegerType())))\
+    .withColumn("multipleBirth", when(col("multipleBirth").isNull(), col("multipleBirthInteger")).otherwise(col("multipleBirth").cast(IntegerType())))\
     .drop("multipleBirthInteger")
     pass
     return details_dfs
