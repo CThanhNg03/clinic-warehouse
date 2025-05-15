@@ -64,7 +64,7 @@ def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
         return rows[0]["batch_id"]
     
     except AnalysisException as e:
-        if "cannot be found" in str(e):
+        if "not found" in str(e):
             create_metadata_table(spark, envi.STORAGE_LOCATION)
             logger.info("Metadata table created as it was not found.")
             return get_next_unprocessed_batch(spark, source)
