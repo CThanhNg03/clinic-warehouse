@@ -24,7 +24,18 @@ def get_warehouse_model(yaml_path=None) -> Dict[str, Dict[str, WarehouseTable]]:
 
     with open(yaml_path, 'r') as file:
         warehouse_model = yaml.safe_load(file)
-
+    
+    for schema, tables in warehouse_model.items():
+        for table_name, table_info in tables.items():
+            source = table_info.get('source')
+            columns = table_info.get('columns', [])
+            transform = table_info.get('transform', None)
+            warehouse_model[schema][table_name] = WarehouseTable(
+                source=source,
+                columns=columns,
+                transform=transform
+            )
+            
     return warehouse_model
 
 def transform_resource_type(df: pd.DataFrame, resource_type: str) -> Dict[str, pd.DataFrame]:
