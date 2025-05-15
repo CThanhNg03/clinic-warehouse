@@ -18,6 +18,14 @@ class SettingEnvironment:
 
     WAREHOUSE_MODEL_YAML = os.getenv('WAREHOUSE_MODEL_YAML')
 
+    database = {
+        'uri': os.getenv('DATABASE_URI'),
+        'user': os.getenv('DATABASE_USER'),
+        'password': os.getenv('DATABASE_PASSWORD'),
+        'driver': os.getenv('DATABASE_DRIVER'),
+        'driver_path': os.getenv('DATABASE_DRIVER_PATH'),
+    }
+
     def __init__(self):
         self.env = os.getenv('ENV')
         
