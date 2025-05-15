@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 import os
 from typing import Literal, Optional
@@ -18,15 +19,15 @@ INGESTED_BATCH_TABLE = envi.INGESTED_BATCH_TABLE
 def create_metadata_table(spark: SparkSession, silver_layer: str):
     spark.sql(f"""
         CREATE DATABASE IF NOT EXISTS {DATABASE}
-
-        CREATE EXTERNAL TABLE IF NOT EXISTS {DATABASE}.{TRANSFORMED_BATCH_TABLE} (
+        """
+    )
+    spark.sql(f"""
+        CREATE TABLE IF NOT EXISTS {DATABASE}.{TRANSFORMED_BATCH_TABLE} (
               batch_id INT,
               save_ts TIMESTAMP,
               source STRING
               )
         STORED AS PARQUET
-        STORED BY ICEBERG
-        LOCATION '{silver_layer}/metadata'
     """)
 
 def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
@@ -56,27 +57,31 @@ def get_next_unprocessed_batch(spark, source: str) -> Optional[str]:
 
         rows = result.collect()
         if not rows:
-            return None
+            return -1
         return rows[0]["batch_id"]
     
     except AnalysisException as e:
-        logger.error(f"Error getting next unprocessed batch: {e}")
-        return None
+        if "cannot be found" in str(e):
+            create_metadata_table(spark, envi.STORAGE_LOCATION)
+            logger.info("Metadata table created as it was not found.")
+            return get_next_unprocessed_batch(spark, source)
+        logger.error(f"Error retrieving next unprocessed batch: {e}")
+        raise e
     
-def save_transformed_batch_id(spark: SparkSession, batch_id: int, silver_layer: str):
+def save_transformed_batch_id(spark: SparkSession, batch_id: int, silver_layer: str, source: str = "local"):
     """
     This function saves the last transformed batch ID to the silver layer.
     """
     try:
         spark.sql(f"""
             INSERT INTO {DATABASE}.{TRANSFORMED_BATCH_TABLE} (batch_id, save_ts, source)
-            VALUES ({batch_id}, CURRENT_TIMESTAMP(), 'local')
+            VALUES ({batch_id}, CURRENT_TIMESTAMP(), "{source}")
         """)
     except AnalysisException as e:
         logger.error(f"Error saving transformed batch metadata: {e}")
         if "cannot be found" in str(e):
             create_metadata_table(spark, silver_layer)
-            save_transformed_batch_id(spark, batch_id, silver_layer)
+            save_transformed_batch_id(spark, batch_id, silver_layer, source)
             logger.info(f"Transformed batch ID {batch_id} saved successfully.")
         else:
             logger.error(f"Unexpected error saving transformed batch ID: {e}")
@@ -92,19 +97,26 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
     bronze_layer = bronze_layer + "/" + source
 
     job_config = {
-        'spark.sql.extensions': 'org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions',
-        'spark.sql.catalog.spark_catalog': 'org.apache.iceberg.spark.SparkSessionCatalog',
-        'spark.sql.catalog.spark_catalog.type': 'hadoop',
-        'spark.sql.catalog.spark_catalog.warehouse': STORAGE_LOCATION
+        # 'spark.sql.extensions': 'org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions',
+        # 'spark.sql.catalog.spark_catalog': 'org.apache.iceberg.spark.SparkSessionCatalog',
+        # 'spark.sql.catalog.spark_catalog.type': 'hadoop',
+        # 'spark.sql.catalog.spark_catalog.warehouse': STORAGE_LOCATION
     }
     spark = get_spark_session(app_name="Transform and Write Data", **job_config)
 
     transform_batch = get_next_unprocessed_batch(spark, source)
 
+    if transform_batch == -1:
+        logger.info("No new batches to process.")
+        return
+    
     if source == 'kakfa':
         transform_batch = datetime.fromtimestamp(int(transform_batch)).strftime("%Y-%m-%d %H:%M:%S")
         
-    df = spark.read.parquet(f"{bronze_layer}/batch_{transform_batch}")
+    df = spark.read.parquet(f"{bronze_layer}/batch_{transform_batch}.parquet")
+
+    # this is for local run
+    # df.repartition(30)
 
     # Transform data
     transform_dfs = transform_data(df)
@@ -122,5 +134,17 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
             raise e
     finally:
         # Save transformed batch ID
-        save_transformed_batch_id(spark, transform_batch, STORAGE_LOCATION)
+        save_transformed_batch_id(spark, transform_batch, STORAGE_LOCATION, source)
         logger.info(f"Transformed batch ID {transform_batch} saved successfully.")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Transform and write data to silver layer")
+    parser.add_argument(
+        "--source",
+        type=str,
+        choices=["local", "kafka"],
+        default="local",
+        help="Source of data: 'local' or 'kafka'",
+    )
+    args = parser.parse_args()
+    main(source=args.source)

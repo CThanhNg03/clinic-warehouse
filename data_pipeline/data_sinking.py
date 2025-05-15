@@ -31,7 +31,7 @@ def create_metadata_table(spark: pd.SparkSession, layer: str):
         """)
         
         spark.sql(f"""
-            CREATE EXTERNAL TABLE IF NOT EXISTS {DATABASE}.{table_name} (
+            CREATE TABLE IF NOT EXISTS {DATABASE}.{table_name} (
                 batch_id INT,
                 save_ts TIMESTAMP,
                 source STRING

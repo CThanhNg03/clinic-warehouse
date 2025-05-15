@@ -72,7 +72,7 @@ def transform_data(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
         .drop("entries")\
         .select("resourceType", col("data.resource").alias("data")).persist()
     
-    unique_resourceTypes = df.select("resourceType").distinct().rdd.map(lambda r: r["resourceType"]).collect()
+    unique_resourceTypes = [row.resourceType for row in df.repartition(100, "resourceType").select("resourceType").dropDuplicates().collect()]
 
     # Create a dictionary to store the transformed data
     details_dfs: Dict[str, pd.DataFrame] = {}

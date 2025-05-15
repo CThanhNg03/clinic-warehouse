@@ -20,6 +20,9 @@ def create_bronze_metadata_table(spark: SparkSession):
     """
     This function creates a metadata table for the bronze layer.
     """
+    global BRONZE_LAYER
+    global DATABASE
+    global INGESTED_BATCH_TABLE
     if not BRONZE_LAYER:
         raise ValueError("BRONZE_LAYER is not set.")
 
@@ -28,7 +31,7 @@ def create_bronze_metadata_table(spark: SparkSession):
             CREATE DATABASE IF NOT EXISTS {DATABASE}
         """)
         spark.sql(f"""
-            CREATE EXTERNAL TABLE IF NOT EXISTS {DATABASE}.{INGESTED_BATCH_TABLE} (
+            CREATE TABLE IF NOT EXISTS {DATABASE}.{INGESTED_BATCH_TABLE} (
                 batch_id INT,
                 save_ts TIMESTAMP,
                 source STRING
@@ -43,6 +46,8 @@ def get_last_batch_id(spark: SparkSession, source: str) -> int:
     """
     This function retrieves the last batch ID from the bronze layer.
     """
+    global DATABASE
+    global INGESTED_BATCH_TABLE
     try:
         batch_id = spark.sql(f"""
             SELECT MAX(batch_id) as batch_id
@@ -52,22 +57,24 @@ def get_last_batch_id(spark: SparkSession, source: str) -> int:
 
         if batch_id is None:
             logger.warning("Batch metadata not found. Starting from batch ID 0.")
-            return 0
+            return None
         return batch_id
     
     except AnalysisException:
         logger.warning("Batch metadata table not found, creating it. Starting from batch ID 0.")
         create_bronze_metadata_table(spark)
-        return 0
+        return None
 
 def save_last_batch_id(spark: SparkSession, batch_id: int, source: str = "local"):
     """
     This function saves the last batch ID to the bronze layer.
     """
+    global DATABASE
+    global INGESTED_BATCH_TABLE
     try:
         spark.sql(f"""
             INSERT INTO {DATABASE}.{INGESTED_BATCH_TABLE} (batch_id, save_ts, source)
-            VALUES ({batch_id}, CURRENT_TIMESTAMP, {source})
+            VALUES ({batch_id}, CURRENT_TIMESTAMP, '{source}')
         """)
     except AnalysisException as e:
         logger.error(f"Error saving batch metadata: {e}")
@@ -84,6 +91,7 @@ def fetch_data_from_local(spark: SparkSession, last_batch: int):
     This function ingests initial batch data from the local filesystem.
     It read from $EHR_PATH
     """
+    global BRONZE_LAYER
     BRONZE_LAYER = BRONZE_LAYER + "/local" if BRONZE_LAYER else None
     path = envi.EHR_PATH
 

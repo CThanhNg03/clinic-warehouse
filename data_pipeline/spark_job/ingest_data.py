@@ -8,7 +8,11 @@ def main(source: Literal['local', 'kafka'] = 'local'):
     spark = get_spark_session(app_name="Extract Data")
     
     if source == 'local':
-        last_batch = get_last_batch_id(spark)
+        last_batch = get_last_batch_id(spark, source)
+        if last_batch is None:
+            last_batch = 0
+        else:
+            last_batch += 1
         fetch_data_from_local(spark, last_batch)
     elif source == 'kafka':
         fetch_data_from_kafka(spark)

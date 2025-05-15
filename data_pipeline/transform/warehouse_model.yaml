@@ -104,6 +104,7 @@ clinical:
     columns:
       - code AS condition_code_key
       - display AS condition_name
+      - category AS condition_category
 
   dim_diagnostic_code:
     source: diagnostic_code
