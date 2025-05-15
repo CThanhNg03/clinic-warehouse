@@ -1,5 +1,5 @@
 import os
-from typing import IO, List
+from typing import IO, List, Union
 from data_pipeline.utils import Debug
 from pyspark.sql import SparkSession
 from pyspark.sql.utils import AnalysisException
@@ -128,7 +128,7 @@ def fetch_data_from_local(spark: SparkSession, last_batch: int):
             batch.clear()
             batch_num, batch_id = 0, batch_id + 1
 
-def save_batch_data(spark: SparkSession, data: List[str] | IO, batch_name: str):
+def save_batch_data(spark: SparkSession, data: Union[List[str], IO], batch_name: str):
     """
     This function saves a batch of JSON data to storage as Parquet files.
     """
