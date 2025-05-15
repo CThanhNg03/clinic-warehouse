@@ -121,11 +121,16 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
         if table_type != "iceberg" and table_type != "hive":
             raise ValueError("Unsupported table type. Supported types are 'hive' and 'iceberg'.")
         
-        if mode == "create":
-            writer.create()
-        else:
+        try:
             writer.append()
-    
+
+        except AnalysisException as e:
+            if "not found" in str(e):
+                writer.create()
+                logger.info(f"Table {table_name} created successfully.")
+            else:
+                logger.error(f"Error writing to table {table_name}: {e}")
+                raise e
 def write_to_postgres(df: pd.DataFrame, table_name: str, *, mode: str = "append"):
     """
     Write a Spark DataFrame to a PostgreSQL table.
