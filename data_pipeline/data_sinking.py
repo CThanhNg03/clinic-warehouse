@@ -118,7 +118,7 @@ def write_to_silver(spark: pd.SparkSession, dfs: Dict[str, pd.DataFrame], dst: s
         if table_type == "hive":
             writer.tableProperty("format", format)
         
-        if table_type != "iceberg":
+        if table_type != "iceberg" and table_type != "hive":
             raise ValueError("Unsupported table type. Supported types are 'hive' and 'iceberg'.")
         
         if mode == "create":
