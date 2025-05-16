@@ -25,7 +25,7 @@ default_args = {
 with DAG(
     'ETL_Pipeline',
     default_args=default_args,
-    schedule_interval='@daily',
+    schedule='@daily',
     catchup=False,
 ) as dag:
 
