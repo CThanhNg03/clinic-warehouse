@@ -130,6 +130,7 @@ def fetch_data_from_local(spark: SparkSession, last_batch: int):
             save_last_batch_id(spark, batch_id)
             batch.clear()
             batch_num, batch_id = 0, batch_id + 1
+            return
 
 def save_batch_data(spark: SparkSession, data: Union[List[str], IO], batch_name: str):
     """
