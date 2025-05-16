@@ -2,7 +2,9 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 import os
+import dotenv
 
+dotenv.load_dotenv()
 project_root = os.getenv("PROJECT_DIR")  # /root/thanhnc
 spark_job_dir = os.path.join(project_root, 'clinic-warehouse', 'data_pipeline', 'spark_job')
 
