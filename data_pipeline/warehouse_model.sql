@@ -100,7 +100,8 @@ CREATE TABLE clinical.dim_observation_code (
 
 CREATE TABLE clinical.dim_condition_code (
     condition_code_key VARCHAR PRIMARY KEY,
-    condition_name VARCHAR(255)
+    condition_name VARCHAR(255),
+    condition_category VARCHAR(255),
 );
 
 CREATE TABLE clinical.dim_medication (

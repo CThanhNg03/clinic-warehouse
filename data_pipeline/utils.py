@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 
 from config.settings import envi
 
-def get_spark_session(app_name: str, job_config: dict) -> SparkSession:
+def get_spark_session(app_name: str, job_config: dict = None) -> SparkSession:
     """
     Creates and returns a Spark session with dynamic configurations.
 

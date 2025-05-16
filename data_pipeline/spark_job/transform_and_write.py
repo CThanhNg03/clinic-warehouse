@@ -105,7 +105,7 @@ def main(source: Literal['local', 'kakfa'] = 'local'):
         # 'spark.sql.catalog.spark_catalog.type': 'hadoop',
         # 'spark.sql.catalog.spark_catalog.warehouse': STORAGE_LOCATION
     }
-    spark = get_spark_session(app_name="Transform and Write Data", **job_config)
+    spark = get_spark_session(app_name="Transform and Write Data", job_config=job_config)
 
     transform_batch = get_next_unprocessed_batch(spark, source)
 
