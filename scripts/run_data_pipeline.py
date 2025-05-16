@@ -3,11 +3,12 @@ from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 import os
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-spark_job_dir = os.path.abspath(os.path.join(current_dir, '..', 'data_pipeline/spark_job'))
+project_root = os.getenv("PROJECT_DIR")  # /root/thanhnc
+spark_job_dir = os.path.join(project_root, 'clinic-warehouse', 'data_pipeline', 'spark_job')
 
-SPARK_MASTER = "local[*]" 
-SOURCE_TYPE = "local"  
+SPARK_MASTER = "local[*]"
+SOURCE_TYPE = "local"
+JAR_PATH = os.path.join(project_root, 'postgresql-42.7.4.jar')
 
 default_args = {
     'owner': 'airflow',
@@ -29,6 +30,7 @@ with DAG(
     extract_data = BashOperator(
         task_id='extract_data',
         bash_command=(
+            f'PYTHONPATH={project_root}/clinic-warehouse '
             f'spark-submit --master {SPARK_MASTER} '
             f'{spark_job_dir}/ingest_data.py --source {SOURCE_TYPE}'
         ),
@@ -37,7 +39,9 @@ with DAG(
     transform_data = BashOperator(
         task_id='transform_data',
         bash_command=(
+            f'PYTHONPATH={project_root}/clinic-warehouse '
             f'spark-submit --master {SPARK_MASTER} '
+            f'--executor-memory 8g --driver-memory 8g '
             f'{spark_job_dir}/transform_and_write.py'
         ),
     )
@@ -45,7 +49,10 @@ with DAG(
     load_data = BashOperator(
         task_id='load_data',
         bash_command=(
+            f'PYTHONPATH={project_root}/clinic-warehouse '
             f'spark-submit --master {SPARK_MASTER} '
+            f'--executor-memory 8g --driver-memory 8g '
+            f'--jars {JAR_PATH} '
             f'{spark_job_dir}/modeling.py'
         ),
     )
