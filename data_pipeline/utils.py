@@ -17,6 +17,9 @@ def get_spark_session(app_name: str, job_config: dict = None) -> SparkSession:
     """
     config = SparkConf().setAppName(app_name)
     # Apply additional configurations if provided
+    if job_config is None:
+        job_config = {}
+        
     for key, value in job_config.items():
         config.set(key, value)
 
